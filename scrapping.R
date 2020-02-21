@@ -47,25 +47,95 @@ df_care = map_df(links_care, bind_rows)
 write.csv(links, "data/processed/links.csv", row.names = FALSE)
 
 
+links = read_csv("data/processed/links.csv")
+
+
 # scrap informations
 
-webs = links$web
+urls = links$web[[1]]
 
 
 #####
 
 
 
+df = read_html(urls)
 
-get_vars =  function(url){
+name = df %>%
+  html_nodes(xpath = '/html/head/title/text()') %>% 
+  html_text() %>% 
+  as.data.frame() 
+
+
+places =df %>%
+  html_nodes(xpath = 'mr-2 font semibold mb-1') %>% 
+  html_text() %>% 
+  as.data.frame() 
+
+servicios  = df %>%
+  html_nodes(xpath = '') %>% 
+  html_text() %>% 
+  as.data.frame() 
+
+
+
+get_name =  function(url){
   
-  data <- read_html(url)
+data <- read_html(url)
 
 name =  data %>%  html_nodes(xpath = '/html/head/title/text()') %>% html_text() %>% as.data.frame() 
-price =  data %>%  html_nodes(xpath = '//*[@id="sticky"]/div/div[1]') %>% html_text() %>% as.data.frame() 
-capacity = data %>%  html_nodes(xpath = '/html/body/div[4]/div/div[1]/div[1]/div/div/div[1]') %>% html_text() %>% as.data.frame()
-ownership = data %>% html_nodes(xpath = "/html/body/div[4]/div/div[1]/div[1]/div/div/div[2]") %>% html_text() %>% as.data.frame()
-address  = data %>% html_nodes(xpath = "/html/body/div[4]/div/div[1]/div[2]/div[2]/div/a/span") %>% html_text() %>% as.data.frame()
+
+}
+
+name = map(urls, get_name)
+
+
+get_price =  function(url){
+  
+  data <- read_html(url)
+  
+  price =  data %>%  html_nodes(xpath = '//*[@id="sticky"]/div/div[1]') %>% html_text() %>% as.data.frame() 
+  
+}
+
+
+get_capacity =  function(url){
+  
+  data <- read_html(url)
+  
+  capacity = data %>%  html_nodes(xpath = '/html/body/div[4]/div/div[1]/div[1]/div/div/div[1]') %>% html_text() %>% as.data.frame()
+  
+}
+
+
+
+get_capacity2 =  function(url){
+  
+  data <- read_html(url)
+  
+  capacity = data %>%  html_nodes(xpath = '/html/body/div[4]/div/div[1]/div[1]/div/div/div[3]/span') %>% html_text() %>% as.data.frame()
+  
+}
+
+
+
+get_ownership =  function(url){
+  
+  data <- read_html(url)
+  
+  ownership = data %>% html_nodes(xpath = "/html/body/div[4]/div/div[1]/div[1]/div/div/div[2]") %>% html_text() %>% as.data.frame()
+  
+}
+
+get_address =  function(url){
+  
+  data <- read_html(url)
+  
+  address  = data %>% html_nodes(xpath = "/html/body/div[4]/div/div[1]/div[2]/div[2]/div/a/span") %>% html_text() %>% as.data.frame()
+ 
+}
+
+
 
 care_homes =   bind_cols(name,  
                            price, 
@@ -85,9 +155,35 @@ return(care_homes)
 
 }
 
-test_webs = webs[1:5]
+test_webs = urls[1:50]
 
-test_care_homes = get_vars(test_webs)
+
+
+names = map(test_webs, get_vars)
+df_names = map_df(names, bind_rows)
+
+
+prices = map(test_webs, get_price)
+df_prices = map_df(prices, bind_rows)
+
+
+capacity = map(test_webs, get_capacity)
+df_capacity = map_df(capacity, bind_rows)
+
+ownership = map(test_webs, get_ownership)
+df_ownership = map_df(ownership, bind_rows)
+
+address = map(test_webs, get_address)
+df_address = map_df(address, bind_rows)
+
+
+test = bind_cols(df_names, df_prices, df_capacity, df_address) 
+
+names(test) = c("name",  
+                "price", 
+                "capacity",
+                "address")
+
 
 
 
